@@ -7,64 +7,67 @@
 <title>PartyOnAir</title>
 
 <style>
+
 body{
-    font-family:Arial,sans-serif;
-    background:#111827;
-    color:white;
-    margin:0;
-    padding:20px;
+background:#111827;
+font-family:Arial,sans-serif;
+color:white;
+margin:0;
+padding:20px;
 }
 
 .container{
-    max-width:600px;
-    margin:auto;
+max-width:700px;
+margin:auto;
 }
 
 .card{
-    background:#1f2937;
-    padding:20px;
-    border-radius:15px;
+background:#1f2937;
+padding:25px;
+border-radius:15px;
 }
 
 h1{
-    text-align:center;
+text-align:center;
 }
 
-input,select{
-    width:100%;
-    padding:12px;
-    margin-top:10px;
-    margin-bottom:15px;
-    border:none;
-    border-radius:10px;
-    box-sizing:border-box;
+.subtitle{
+text-align:center;
+opacity:.8;
+margin-bottom:20px;
+}
+
+input{
+width:100%;
+padding:14px;
+margin-bottom:15px;
+border:none;
+border-radius:10px;
+box-sizing:border-box;
+font-size:16px;
 }
 
 button{
-    width:100%;
-    padding:15px;
-    border:none;
-    border-radius:10px;
-    background:#22c55e;
-    color:white;
-    font-size:16px;
-    cursor:pointer;
+width:100%;
+padding:15px;
+background:#22c55e;
+border:none;
+border-radius:10px;
+color:white;
+font-size:18px;
+cursor:pointer;
 }
 
 button:hover{
-    opacity:0.9;
+opacity:.9;
 }
 
 #status{
-    margin-top:15px;
-    text-align:center;
-    font-weight:bold;
+margin-top:15px;
+text-align:center;
+font-weight:bold;
 }
 
-.small{
-    text-align:center;
-    opacity:0.7;
-}
 </style>
 
 </head>
@@ -72,11 +75,11 @@ button:hover{
 
 <div class="container">
 
-<h1>🎵 PartyOnAir</h1>
+<h1>🎧 PartyOnAir</h1>
 
-<p class="small">
-Richiedi la tua canzone
-</p>
+<div class="subtitle">
+Scrivi la canzone che vuoi ascoltare
+</div>
 
 <div class="card">
 
@@ -89,22 +92,6 @@ placeholder="Il tuo nome (facoltativo)"
 id="song"
 placeholder="Titolo canzone"
 >
-
-<input
-id="artist"
-placeholder="Artista"
->
-
-<select id="genre">
-<option value="Dance">Dance</option>
-<option value="Pop">Pop</option>
-<option value="Rock">Rock</option>
-<option value="House">House</option>
-<option value="Latino">Latino</option>
-<option value="Hip Hop">Hip Hop</option>
-<option value="Commerciale">Commerciale</option>
-<option value="Altro">Altro</option>
-</select>
 
 <button onclick="sendRequest()">
 Invia richiesta
@@ -140,16 +127,10 @@ appId: "1:323095980752:web:9fcd2f0626688e13a34cd5"
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-window.sendRequest = async function(){
+window.sendRequest = async () => {
 
 const song =
 document.getElementById("song").value.trim();
-
-const artist =
-document.getElementById("artist").value.trim();
-
-const genre =
-document.getElementById("genre").value;
 
 const name =
 document.getElementById("name").value.trim();
@@ -157,9 +138,11 @@ document.getElementById("name").value.trim();
 const status =
 document.getElementById("status");
 
-if(song === ""){
+if(!song){
+
 status.innerHTML =
-"⚠️ Inserisci il titolo della canzone";
+"⚠️ Inserisci una canzone";
+
 return;
 }
 
@@ -169,8 +152,6 @@ await addDoc(
 collection(db,"requests"),
 {
 song,
-artist,
-genre,
 name,
 votes:1,
 played:false,
@@ -182,20 +163,18 @@ status.innerHTML =
 "✅ Richiesta inviata!";
 
 document.getElementById("song").value="";
-document.getElementById("artist").value="";
-document.getElementById("name").value="";
 
 }
-catch(error){
+catch(e){
 
-console.error(error);
+console.error(e);
 
 status.innerHTML =
-"❌ Errore durante l'invio";
+"❌ Errore";
 
 }
 
-}
+};
 
 </script>
 
