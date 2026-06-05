@@ -1,4 +1,3 @@
-```html
 <!DOCTYPE html>
 <html lang="it">
 <head>
@@ -48,8 +47,8 @@ background:#ff0000;
 color:white;
 }
 
-.deezerBtn{
-background:#8b5cf6;
+.spotifyBtn{
+background:#1DB954;
 color:white;
 }
 
@@ -61,6 +60,12 @@ color:white;
 .archiveBtn{
 background:#f59e0b;
 color:white;
+}
+
+.exportBtn{
+background:#2563eb;
+color:white;
+margin-bottom:15px;
 }
 
 .search{
@@ -123,6 +128,14 @@ Accedi con Google
 
 <h1>🎧 PartyOnAir DJ</h1>
 
+<button
+class="exportBtn"
+onclick="exportSongs()">
+
+📄 Esporta lista canzoni
+
+</button>
+
 <div class="stats">
 
 <div class="stat">
@@ -184,16 +197,23 @@ appId:"1:323095980752:web:9fcd2f0626688e13a34cd5"
 const ALLOWED_UID =
 "qJUDuDDR8LYMOOQ1OHYhz7XP2WB3";
 
-const app = initializeApp(firebaseConfig);
+const app =
+initializeApp(firebaseConfig);
 
-const auth = getAuth(app);
-const db = getFirestore(app);
+const auth =
+getAuth(app);
+
+const db =
+getFirestore(app);
 
 let allSongs = [];
 
 document
 .getElementById("loginBtn")
-.addEventListener("click",login);
+.addEventListener(
+"click",
+login
+);
 
 async function login(){
 
@@ -203,9 +223,15 @@ const provider =
 new GoogleAuthProvider();
 
 const result =
-await signInWithPopup(auth,provider);
+await signInWithPopup(
+auth,
+provider
+);
 
-if(result.user.uid !== ALLOWED_UID){
+if(
+result.user.uid !==
+ALLOWED_UID
+){
 
 document.getElementById(
 "loginError"
@@ -217,19 +243,25 @@ return;
 }
 
 document
-.getElementById("loginSection")
-.classList.add("hidden");
+.getElementById(
+"loginSection"
+)
+.classList.add(
+"hidden"
+);
 
 document
-.getElementById("panel")
-.classList.remove("hidden");
+.getElementById(
+"panel"
+)
+.classList.remove(
+"hidden"
+);
 
 loadSongs();
 
 }
 catch(error){
-
-console.error(error);
 
 document.getElementById(
 "loginError"
@@ -244,20 +276,32 @@ function loadSongs(){
 
 const q =
 query(
-collection(db,"requests"),
-orderBy("votes","desc")
+collection(
+db,
+"requests"
+),
+orderBy(
+"votes",
+"desc"
+)
 );
 
-onSnapshot(q,(snapshot)=>{
+onSnapshot(
+q,
+(snapshot)=>{
 
 allSongs = [];
 
-snapshot.forEach(docSnap=>{
+snapshot.forEach(
+(docSnap)=>{
 
 const data =
 docSnap.data();
 
-if(data.archived) return;
+if(
+data.archived
+)
+return;
 
 allSongs.push({
 id:docSnap.id,
@@ -276,7 +320,9 @@ function renderSongs(){
 
 const search =
 document
-.getElementById("search")
+.getElementById(
+"search"
+)
 .value
 .toLowerCase();
 
@@ -285,13 +331,15 @@ let html = "";
 let totalVotes = 0;
 
 const filtered =
-allSongs.filter(song=>
+allSongs.filter(
+song =>
 (song.song || "")
 .toLowerCase()
 .includes(search)
 );
 
-filtered.forEach(song=>{
+filtered.forEach(
+song => {
 
 totalVotes +=
 song.votes || 0;
@@ -299,8 +347,8 @@ song.votes || 0;
 const youtube =
 `https://www.youtube.com/results?search_query=${encodeURIComponent(song.song)}`;
 
-const deezer =
-`https://www.deezer.com/search/${encodeURIComponent(song.song)}`;
+const spotify =
+`https://open.spotify.com/search/${encodeURIComponent(song.song)}`;
 
 html += `
 <div class="card">
@@ -323,9 +371,9 @@ YouTube
 </button>
 </a>
 
-<a href="${deezer}" target="_blank">
-<button class="deezerBtn">
-Deezer
+<a href="${spotify}" target="_blank">
+<button class="spotifyBtn">
+Spotify
 </button>
 </a>
 
@@ -333,7 +381,7 @@ Deezer
 class="downloadBtn"
 onclick="markDownloaded('${song.id}')">
 
-${song.downloaded ? "✅ Scaricata" : "📥 Scaricata"}
+${song.downloaded ? "✅ Scaricata" : "⬜ Da scaricare"}
 
 </button>
 
@@ -347,8 +395,7 @@ onclick="archiveSong('${song.id}')">
 
 </div>
 `;
-
-});
+  });
 
 document.getElementById(
 "songs"
@@ -367,19 +414,80 @@ totalVotes;
 }
 
 document
-.getElementById("search")
+.getElementById(
+"search"
+)
 .addEventListener(
 "input",
 renderSongs
 );
 
+window.exportSongs = ()=>{
+
+const songs =
+[
+...new Set(
+allSongs
+.filter(
+song => !song.archived
+)
+.map(
+song => song.song
+)
+)
+];
+
+const text =
+songs.join("\n");
+
+const blob =
+new Blob(
+[text],
+{
+type:"text/plain"
+}
+);
+
+const url =
+URL.createObjectURL(
+blob
+);
+
+const a =
+document.createElement(
+"a"
+);
+
+a.href = url;
+
+a.download =
+"PartyOnAir-lista-canzoni.txt";
+
+a.click();
+
+URL.revokeObjectURL(
+url
+);
+
+};
+
 window.markDownloaded =
 async(id)=>{
 
+const song =
+allSongs.find(
+s => s.id === id
+);
+
 await updateDoc(
-doc(db,"requests",id),
+doc(
+db,
+"requests",
+id
+),
 {
-downloaded:true
+downloaded:
+!song.downloaded
 }
 );
 
@@ -388,8 +496,20 @@ downloaded:true
 window.archiveSong =
 async(id)=>{
 
+if(
+!confirm(
+"Archiviare questa richiesta?"
+)
+){
+return;
+}
+
 await updateDoc(
-doc(db,"requests",id),
+doc(
+db,
+"requests",
+id
+),
 {
 archived:true
 }
@@ -401,4 +521,3 @@ archived:true
 
 </body>
 </html>
-```
