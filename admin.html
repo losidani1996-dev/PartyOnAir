@@ -1,19 +1,153 @@
+```html
 <!DOCTYPE html>
 <html lang="it">
 <head>
 <meta charset="UTF-8">
-<title>PartyOnAir Admin</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<title>PartyOnAir DJ</title>
+
+<style>
+
+body{
+background:#111827;
+color:white;
+font-family:Arial,sans-serif;
+margin:0;
+padding:20px;
+}
+
+.container{
+max-width:1200px;
+margin:auto;
+}
+
+.loginCard,
+.card{
+background:#1f2937;
+padding:20px;
+border-radius:15px;
+margin-bottom:15px;
+}
+
+button{
+border:none;
+padding:10px 15px;
+border-radius:8px;
+cursor:pointer;
+margin:3px;
+}
+
+.googleBtn{
+background:#4285F4;
+color:white;
+}
+
+.youtubeBtn{
+background:#ff0000;
+color:white;
+}
+
+.deezerBtn{
+background:#8b5cf6;
+color:white;
+}
+
+.downloadBtn{
+background:#22c55e;
+color:white;
+}
+
+.archiveBtn{
+background:#f59e0b;
+color:white;
+}
+
+.search{
+width:100%;
+padding:12px;
+border:none;
+border-radius:10px;
+margin-bottom:15px;
+box-sizing:border-box;
+}
+
+.stats{
+display:flex;
+gap:15px;
+margin-bottom:20px;
+flex-wrap:wrap;
+}
+
+.stat{
+background:#1f2937;
+padding:15px;
+border-radius:12px;
+flex:1;
+min-width:180px;
+text-align:center;
+}
+
+.hidden{
+display:none;
+}
+
+.small{
+opacity:.8;
+font-size:14px;
+}
+
+</style>
+
 </head>
 
-<body style="font-family:Arial;padding:40px">
+<body>
 
-<h1>PartyOnAir Admin</h1>
+<div class="container">
 
-<button id="loginBtn">
+<div id="loginSection" class="loginCard">
+
+<h1>🎧 PartyOnAir DJ</h1>
+
+<p>Accesso riservato</p>
+
+<button id="loginBtn" class="googleBtn">
 Accedi con Google
 </button>
 
-<pre id="result"></pre>
+<div id="loginError"></div>
+
+</div>
+
+<div id="panel" class="hidden">
+
+<h1>🎧 PartyOnAir DJ</h1>
+
+<div class="stats">
+
+<div class="stat">
+<div id="totalSongs">0</div>
+<div>Richieste</div>
+</div>
+
+<div class="stat">
+<div id="totalVotes">0</div>
+<div>Voti Totali</div>
+</div>
+
+</div>
+
+<input
+id="search"
+class="search"
+placeholder="Cerca canzone..."
+>
+
+<div id="songs"></div>
+
+</div>
+
+</div>
 
 <script type="module">
 
@@ -27,55 +161,244 @@ signInWithPopup
 }
 from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
+import {
+getFirestore,
+collection,
+query,
+orderBy,
+onSnapshot,
+doc,
+updateDoc
+}
+from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
 const firebaseConfig = {
-  apiKey: "AIzaSyAF3y8cP1hEaIoWlnAiesGhqwI2icL6pLg",
-  authDomain: "partyonair-f208c.firebaseapp.com",
-  projectId: "partyonair-f208c",
-  storageBucket: "partyonair-f208c.firebasestorage.app",
-  messagingSenderId: "323095980752",
-  appId: "1:323095980752:web:9fcd2f0626688e13a34cd5"
+apiKey:"AIzaSyAF3y8cP1hEaIoWlnAiesGhqwI2icL6pLg",
+authDomain:"partyonair-f208c.firebaseapp.com",
+projectId:"partyonair-f208c",
+storageBucket:"partyonair-f208c.firebasestorage.app",
+messagingSenderId:"323095980752",
+appId:"1:323095980752:web:9fcd2f0626688e13a34cd5"
 };
 
+const ALLOWED_UID =
+"qJUDuDDR8LYMOOQ1OHYhz7XP2WB3";
+
 const app = initializeApp(firebaseConfig);
+
 const auth = getAuth(app);
+const db = getFirestore(app);
 
-document.getElementById("loginBtn").addEventListener("click", async () => {
+let allSongs = [];
 
-  try {
+document
+.getElementById("loginBtn")
+.addEventListener("click",login);
 
-    const provider = new GoogleAuthProvider();
+async function login(){
 
-    const result = await signInWithPopup(
-      auth,
-      provider
-    );
+try{
 
-    document.getElementById("result").innerText =
-`Login riuscito!
+const provider =
+new GoogleAuthProvider();
 
-Nome: ${result.user.displayName}
+const result =
+await signInWithPopup(auth,provider);
 
-Email: ${result.user.email}
+if(result.user.uid !== ALLOWED_UID){
 
-UID:
-${result.user.uid}`;
+document.getElementById(
+"loginError"
+).innerHTML =
+"❌ Accesso negato";
 
-  } catch(error) {
+return;
 
-    console.error(error);
+}
 
-    document.getElementById("result").innerText =
-`Errore:
+document
+.getElementById("loginSection")
+.classList.add("hidden");
 
-${error.code}
+document
+.getElementById("panel")
+.classList.remove("hidden");
 
-${error.message}`;
+loadSongs();
 
-  }
+}
+catch(error){
+
+console.error(error);
+
+document.getElementById(
+"loginError"
+).innerHTML =
+error.message;
+
+}
+
+}
+
+function loadSongs(){
+
+const q =
+query(
+collection(db,"requests"),
+orderBy("votes","desc")
+);
+
+onSnapshot(q,(snapshot)=>{
+
+allSongs = [];
+
+snapshot.forEach(docSnap=>{
+
+const data =
+docSnap.data();
+
+if(data.archived) return;
+
+allSongs.push({
+id:docSnap.id,
+...data
+});
 
 });
+
+renderSongs();
+
+});
+
+}
+
+function renderSongs(){
+
+const search =
+document
+.getElementById("search")
+.value
+.toLowerCase();
+
+let html = "";
+
+let totalVotes = 0;
+
+const filtered =
+allSongs.filter(song=>
+(song.song || "")
+.toLowerCase()
+.includes(search)
+);
+
+filtered.forEach(song=>{
+
+totalVotes +=
+song.votes || 0;
+
+const youtube =
+`https://www.youtube.com/results?search_query=${encodeURIComponent(song.song)}`;
+
+const deezer =
+`https://www.deezer.com/search/${encodeURIComponent(song.song)}`;
+
+html += `
+<div class="card">
+
+<h3>${song.song}</h3>
+
+<div class="small">
+👤 ${song.name || "Anonimo"}
+</div>
+
+<div>
+👍 ${song.votes || 1} voti
+</div>
+
+<br>
+
+<a href="${youtube}" target="_blank">
+<button class="youtubeBtn">
+YouTube
+</button>
+</a>
+
+<a href="${deezer}" target="_blank">
+<button class="deezerBtn">
+Deezer
+</button>
+</a>
+
+<button
+class="downloadBtn"
+onclick="markDownloaded('${song.id}')">
+
+${song.downloaded ? "✅ Scaricata" : "📥 Scaricata"}
+
+</button>
+
+<button
+class="archiveBtn"
+onclick="archiveSong('${song.id}')">
+
+🗄️ Archivia
+
+</button>
+
+</div>
+`;
+
+});
+
+document.getElementById(
+"songs"
+).innerHTML = html;
+
+document.getElementById(
+"totalSongs"
+).innerHTML =
+filtered.length;
+
+document.getElementById(
+"totalVotes"
+).innerHTML =
+totalVotes;
+
+}
+
+document
+.getElementById("search")
+.addEventListener(
+"input",
+renderSongs
+);
+
+window.markDownloaded =
+async(id)=>{
+
+await updateDoc(
+doc(db,"requests",id),
+{
+downloaded:true
+}
+);
+
+};
+
+window.archiveSong =
+async(id)=>{
+
+await updateDoc(
+doc(db,"requests",id),
+{
+archived:true
+}
+);
+
+};
 
 </script>
 
 </body>
 </html>
+```
