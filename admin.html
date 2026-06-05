@@ -353,7 +353,10 @@ const spotify =
 html += `
 <div class="card">
 
-<h3>${song.song}</h3>
+<h3>
+${song.song}
+${song.artist ? " - " + song.artist : ""}
+</h3>
 
 <div class="small">
 👤 ${song.name || "Anonimo"}
@@ -431,8 +434,10 @@ allSongs
 .filter(
 song => !song.archived
 )
-.map(
-song => song.song
+.map(song =>
+song.artist
+? `${song.song} - ${song.artist}`
+: song.song
 )
 )
 ];
