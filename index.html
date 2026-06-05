@@ -1,83 +1,104 @@
-```html
 <!DOCTYPE html>
 <html lang="it">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 
 <title>PartyOnAir</title>
 
 <style>
+
 body{
-    font-family:Arial,sans-serif;
-    background:#111827;
-    color:white;
-    margin:0;
-    padding:20px;
+font-family:Arial,sans-serif;
+background:#0f172a;
+color:white;
+margin:0;
+padding:20px;
 }
 
 .container{
-    max-width:700px;
-    margin:auto;
+max-width:700px;
+margin:auto;
 }
 
 .card{
-    background:#1f2937;
-    padding:20px;
-    border-radius:15px;
+background:#1e293b;
+padding:25px;
+border-radius:16px;
 }
 
 h1{
-    text-align:center;
+text-align:center;
+margin-bottom:10px;
 }
 
-input,select{
-    width:100%;
-    padding:12px;
-    margin-top:10px;
-    margin-bottom:15px;
-    border:none;
-    border-radius:10px;
-    box-sizing:border-box;
+.subtitle{
+text-align:center;
+opacity:.8;
+margin-bottom:25px;
+}
+
+input{
+width:100%;
+padding:14px;
+border:none;
+border-radius:10px;
+margin-bottom:15px;
+box-sizing:border-box;
+font-size:16px;
 }
 
 button{
-    width:100%;
-    padding:15px;
-    border:none;
-    border-radius:10px;
-    background:#22c55e;
-    color:white;
-    font-size:16px;
-    cursor:pointer;
+width:100%;
+padding:15px;
+border:none;
+border-radius:10px;
+background:#22c55e;
+color:white;
+font-size:16px;
+cursor:pointer;
 }
 
 button:hover{
-    opacity:0.9;
+opacity:.9;
 }
 
 #status{
-    margin-top:15px;
-    text-align:center;
-    font-weight:bold;
+margin-top:15px;
+text-align:center;
+font-weight:bold;
 }
 
-.small{
-    text-align:center;
-    opacity:0.7;
+.suggestionBox{
+background:#111827;
+border-radius:10px;
+overflow:hidden;
+margin-top:-10px;
+margin-bottom:15px;
 }
+
+.suggestion{
+padding:12px;
+cursor:pointer;
+border-bottom:1px solid #374151;
+}
+
+.suggestion:hover{
+background:#1f2937;
+}
+
 </style>
-
 </head>
+
 <body>
 
 <div class="container">
 
 <h1>🎵 PartyOnAir</h1>
 
-<p class="small">
+<div class="subtitle">
 Richiedi la tua canzone
-</p>
+</div>
 
 <div class="card">
 
@@ -88,24 +109,11 @@ placeholder="Il tuo nome (facoltativo)"
 
 <input
 id="song"
-placeholder="Titolo canzone"
+placeholder="Cerca una canzone..."
+autocomplete="off"
 >
 
-<input
-id="artist"
-placeholder="Artista (facoltativo)"
->
-
-<select id="genre">
-<option value="Dance">Dance</option>
-<option value="Pop">Pop</option>
-<option value="Rock">Rock</option>
-<option value="House">House</option>
-<option value="Latino">Latino</option>
-<option value="Hip Hop">Hip Hop</option>
-<option value="Commerciale">Commerciale</option>
-<option value="Altro">Altro</option>
-</select>
+<div id="suggestions" class="suggestionBox"></div>
 
 <button onclick="sendRequest()">
 Invia richiesta
@@ -119,7 +127,8 @@ Invia richiesta
 
 <script type="module">
 
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { initializeApp }
+from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 
 import {
 getFirestore,
@@ -134,16 +143,90 @@ updateDoc
 from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const firebaseConfig = {
-apiKey: "AIzaSyAF3y8cP1hEaIoWlnAiesGhqWI2icL6pLg",
-authDomain: "partyonair-f208c.firebaseapp.com",
-projectId: "partyonair-f208c",
-storageBucket: "partyonair-f208c.firebasestorage.app",
-messagingSenderId: "323095980752",
-appId: "1:323095980752:web:9fcd2f0626688e13a34cd5"
+apiKey:"AIzaSyAF3y8cP1hEaIoWlnAiesGhqWI2icL6pLg",
+authDomain:"partyonair-f208c.firebaseapp.com",
+projectId:"partyonair-f208c",
+storageBucket:"partyonair-f208c.firebasestorage.app",
+messagingSenderId:"323095980752",
+appId:"1:323095980752:web:9fcd2f0626688e13a34cd5"
 };
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
+
+let selectedArtist = "";
+
+const songInput =
+document.getElementById("song");
+
+const suggestions =
+document.getElementById("suggestions");
+
+songInput.addEventListener("input", async ()=>{
+
+const text =
+songInput.value.trim();
+
+if(text.length < 3){
+
+suggestions.innerHTML = "";
+return;
+
+}
+
+try{
+
+const response =
+await fetch(
+`https://api.deezer.com/search?q=${encodeURIComponent(text)}&output=jsonp`
+);
+
+}catch{}
+
+fetch(
+`https://corsproxy.io/?https://api.deezer.com/search?q=${encodeURIComponent(text)}`
+)
+.then(r=>r.json())
+.then(data=>{
+
+suggestions.innerHTML = "";
+
+if(!data.data) return;
+
+data.data.slice(0,8).forEach(track=>{
+
+const div =
+document.createElement("div");
+
+div.className = "suggestion";
+
+div.textContent =
+`${track.title} - ${track.artist.name}`;
+
+div.onclick = ()=>{
+
+songInput.value =
+track.title;
+
+selectedArtist =
+track.artist.name;
+
+suggestions.innerHTML = "";
+
+};
+
+suggestions.appendChild(div);
+
+});
+
+})
+.catch(()=>{
+
+suggestions.innerHTML = "";
+
+});
+
+});
 
 window.sendRequest = async function(){
 
@@ -151,29 +234,15 @@ const status =
 document.getElementById("status");
 
 const song =
-document.getElementById("song")
-.value
-.trim()
-.toLowerCase();
-
-const artist =
-document.getElementById("artist")
-.value
-.trim();
-
-const genre =
-document.getElementById("genre")
-.value;
+songInput.value.trim();
 
 const name =
-document.getElementById("name")
-.value
-.trim();
+document.getElementById("name").value.trim();
 
-if(!song){
+if(song===""){
 
 status.innerHTML =
-"⚠️ Inserisci il titolo della canzone";
+"⚠️ Inserisci una canzone";
 
 return;
 
@@ -181,18 +250,19 @@ return;
 
 try{
 
-const q = query(
+const existingQuery =
+query(
 collection(db,"requests"),
-where("song","==",song)
+where("song","==",song.toLowerCase())
 );
 
-const snapshot =
-await getDocs(q);
+const existingDocs =
+await getDocs(existingQuery);
 
-if(!snapshot.empty){
+if(existingDocs.size > 0){
 
 const existingDoc =
-snapshot.docs[0];
+existingDocs.docs[0];
 
 const currentVotes =
 existingDoc.data().votes || 1;
@@ -205,31 +275,30 @@ votes: currentVotes + 1
 );
 
 status.innerHTML =
-"👍 Canzone già presente, voto aggiunto!";
+"👍 Voto aggiunto alla richiesta esistente";
 
 }else{
 
 await addDoc(
 collection(db,"requests"),
 {
-song,
-artist,
-genre,
-name,
-votes:1,
-played:false,
-createdAt:serverTimestamp()
+song: song.toLowerCase(),
+artist: selectedArtist,
+name: name,
+votes: 1,
+createdAt: serverTimestamp()
 }
 );
 
 status.innerHTML =
-"✅ Richiesta inviata!";
+"✅ Richiesta inviata";
 
 }
 
-document.getElementById("song").value="";
-document.getElementById("artist").value="";
+songInput.value="";
 document.getElementById("name").value="";
+selectedArtist="";
+suggestions.innerHTML="";
 
 }
 catch(error){
@@ -247,4 +316,3 @@ status.innerHTML =
 
 </body>
 </html>
-```
