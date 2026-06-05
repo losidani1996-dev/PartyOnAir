@@ -1,9 +1,10 @@
 <!DOCTYPE html>
-<html>
+<html lang="it">
 <head>
 <meta charset="UTF-8">
-<title>PartyOnAir Login</title>
+<title>PartyOnAir Admin</title>
 </head>
+
 <body style="font-family:Arial;padding:40px">
 
 <h1>PartyOnAir Admin</h1>
@@ -27,7 +28,7 @@ signInWithPopup
 from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyAF3xP1hEaIoWlnAiesGhqWI2icL6pLg",
+  apiKey: "AIzaSyAF3y8cP1hEaIoWlnAiesGhqwI2icL6pLg",
   authDomain: "partyonair-f208c.firebaseapp.com",
   projectId: "partyonair-f208c",
   storageBucket: "partyonair-f208c.firebasestorage.app",
@@ -38,22 +39,41 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 
-document.getElementById("loginBtn").onclick = async ()=>{
+document.getElementById("loginBtn").addEventListener("click", async () => {
 
-const provider = new GoogleAuthProvider();
+  try {
 
-const result =
-await signInWithPopup(auth,provider);
+    const provider = new GoogleAuthProvider();
 
-document.getElementById("result").innerText =
-`
-EMAIL: ${result.user.email}
+    const result = await signInWithPopup(
+      auth,
+      provider
+    );
+
+    document.getElementById("result").innerText =
+`Login riuscito!
+
+Nome: ${result.user.displayName}
+
+Email: ${result.user.email}
 
 UID:
-${result.user.uid}
-`;
+${result.user.uid}`;
 
-};
+  } catch(error) {
+
+    console.error(error);
+
+    document.getElementById("result").innerText =
+`Errore:
+
+${error.code}
+
+${error.message}`;
+
+  }
+
+});
 
 </script>
 
