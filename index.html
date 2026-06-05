@@ -29,28 +29,41 @@ const db = getFirestore(app);
 
 window.sendRequest = async function(){
 
-const song =
-document.getElementById("song").value.trim();
-
-const artist =
-document.getElementById("artist").value.trim();
-
-const genre =
-document.getElementById("genre").value;
-
-const name =
-document.getElementById("name").value.trim();
-
 const status =
 document.getElementById("status");
 
+const song =
+document.getElementById("song")
+.value
+.trim()
+.toLowerCase();
+
+const artist =
+document.getElementById("artist")
+.value
+.trim();
+
+const genre =
+document.getElementById("genre")
+.value;
+
+const name =
+document.getElementById("name")
+.value
+.trim();
+
 if(song === ""){
+
 status.innerHTML =
 "⚠️ Inserisci il titolo della canzone";
+
 return;
+
 }
 
 try{
+
+console.log("Cerco canzone:", song);
 
 const existingQuery = query(
 collection(db,"requests"),
@@ -60,7 +73,12 @@ where("song","==",song)
 const existingDocs =
 await getDocs(existingQuery);
 
-if(!existingDocs.empty){
+console.log(
+"Documenti trovati:",
+existingDocs.size
+);
+
+if(existingDocs.size > 0){
 
 const existingDoc =
 existingDocs.docs[0];
@@ -76,31 +94,40 @@ votes: currentVotes + 1
 );
 
 status.innerHTML =
-"👍 Canzone già richiesta, voto aggiunto!";
+"👍 Canzone già presente, voto aggiunto!";
+
+console.log(
+"Nuovi voti:",
+currentVotes + 1
+);
 
 }else{
 
 await addDoc(
 collection(db,"requests"),
 {
-song,
-artist,
-genre,
-name,
-votes:1,
-played:false,
-createdAt:serverTimestamp()
+song: song,
+artist: artist,
+genre: genre,
+name: name,
+votes: 1,
+played: false,
+createdAt: serverTimestamp()
 }
 );
 
 status.innerHTML =
 "✅ Richiesta inviata!";
 
+console.log(
+"Nuova canzone salvata"
+);
+
 }
 
-document.getElementById("song").value="";
-document.getElementById("artist").value="";
-document.getElementById("name").value="";
+document.getElementById("song").value = "";
+document.getElementById("artist").value = "";
+document.getElementById("name").value = "";
 
 }
 catch(error){
