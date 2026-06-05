@@ -1,20 +1,202 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>PartyOnAir</title>
+
+<style>
+body{
+    font-family:Arial,sans-serif;
+    background:#111827;
+    color:white;
+    margin:0;
+    padding:20px;
+}
+
+.container{
+    max-width:600px;
+    margin:auto;
+}
+
+.card{
+    background:#1f2937;
+    padding:20px;
+    border-radius:15px;
+}
+
+h1{
+    text-align:center;
+}
+
+input,select{
+    width:100%;
+    padding:12px;
+    margin-top:10px;
+    margin-bottom:15px;
+    border:none;
+    border-radius:10px;
+    box-sizing:border-box;
+}
+
+button{
+    width:100%;
+    padding:15px;
+    border:none;
+    border-radius:10px;
+    background:#22c55e;
+    color:white;
+    font-size:16px;
+    cursor:pointer;
+}
+
+button:hover{
+    opacity:0.9;
+}
+
+#status{
+    margin-top:15px;
+    text-align:center;
+    font-weight:bold;
+}
+
+.small{
+    text-align:center;
+    opacity:0.7;
+}
+</style>
+
+</head>
 <body>
 
+<div class="container">
+
 <h1>🎵 PartyOnAir</h1>
-<p>Versione iniziale</p>
 
-<input id="song" placeholder="Titolo canzone">
-<input id="artist" placeholder="Artista">
+<p class="small">
+Richiedi la tua canzone
+</p>
 
-<button onclick="sendRequest()">Invia richiesta</button>
+<div class="card">
 
-<p id="msg"></p>
+<input
+id="name"
+placeholder="Il tuo nome (facoltativo)"
+>
 
-<script>
-function sendRequest(){
-    document.getElementById("msg").innerText =
-    "Richiesta inviata!";
+<input
+id="song"
+placeholder="Titolo canzone"
+>
+
+<input
+id="artist"
+placeholder="Artista"
+>
+
+<select id="genre">
+<option value="Dance">Dance</option>
+<option value="Pop">Pop</option>
+<option value="Rock">Rock</option>
+<option value="House">House</option>
+<option value="Latino">Latino</option>
+<option value="Hip Hop">Hip Hop</option>
+<option value="Commerciale">Commerciale</option>
+<option value="Altro">Altro</option>
+</select>
+
+<button onclick="sendRequest()">
+Invia richiesta
+</button>
+
+<div id="status"></div>
+
+</div>
+
+</div>
+
+<script type="module">
+
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+
+import {
+getFirestore,
+collection,
+addDoc,
+serverTimestamp
 }
+from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+const firebaseConfig = {
+apiKey: "AIzaSyAF3y8cP1hEaIoWlnAiesGhqWI2icL6pLg",
+authDomain: "partyonair-f208c.firebaseapp.com",
+projectId: "partyonair-f208c",
+storageBucket: "partyonair-f208c.firebasestorage.app",
+messagingSenderId: "323095980752",
+appId: "1:323095980752:web:9fcd2f0626688e13a34cd5"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+window.sendRequest = async function(){
+
+const song =
+document.getElementById("song").value.trim();
+
+const artist =
+document.getElementById("artist").value.trim();
+
+const genre =
+document.getElementById("genre").value;
+
+const name =
+document.getElementById("name").value.trim();
+
+const status =
+document.getElementById("status");
+
+if(song === ""){
+status.innerHTML =
+"⚠️ Inserisci il titolo della canzone";
+return;
+}
+
+try{
+
+await addDoc(
+collection(db,"requests"),
+{
+song,
+artist,
+genre,
+name,
+votes:1,
+played:false,
+createdAt:serverTimestamp()
+}
+);
+
+status.innerHTML =
+"✅ Richiesta inviata!";
+
+document.getElementById("song").value="";
+document.getElementById("artist").value="";
+document.getElementById("name").value="";
+
+}
+catch(error){
+
+console.error(error);
+
+status.innerHTML =
+"❌ Errore durante l'invio";
+
+}
+
+}
+
 </script>
 
 </body>
