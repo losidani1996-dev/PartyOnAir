@@ -1,144 +1,126 @@
 <script type="module">
 
-import { initializeApp }
-from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 
 import {
-getFirestore,
-collection,
-addDoc,
-serverTimestamp,
-query,
-where,
-getDocs,
-updateDoc
-}
-from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+  getFirestore,
+  collection,
+  addDoc,
+  serverTimestamp,
+  query,
+  where,
+  getDocs,
+  updateDoc
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const firebaseConfig = {
-apiKey: "AIzaSyAF3y8cP1hEaIoWlnAiesGhqWI2icL6pLg",
-authDomain: "partyonair-f208c.firebaseapp.com",
-projectId: "partyonair-f208c",
-storageBucket: "partyonair-f208c.firebasestorage.app",
-messagingSenderId: "323095980752",
-appId: "1:323095980752:web:9fcd2f0626688e13a34cd5"
+  apiKey: "AIzaSyAF3y8cP1hEaIoWlnAiesGhqWI2icL6pLg",
+  authDomain: "partyonair-f208c.firebaseapp.com",
+  projectId: "partyonair-f208c",
+  storageBucket: "partyonair-f208c.firebasestorage.app",
+  messagingSenderId: "323095980752",
+  appId: "1:323095980752:web:9fcd2f0626688e13a34cd5"
 };
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-window.sendRequest = async function(){
+window.sendRequest = async function () {
 
-const status =
-document.getElementById("status");
+  const status = document.getElementById("status");
 
-const song =
-document.getElementById("song")
-.value
-.trim()
-.toLowerCase();
+  const song = document
+    .getElementById("song")
+    .value
+    .trim()
+    .toLowerCase();
 
-const artist =
-document.getElementById("artist")
-.value
-.trim();
+  const artist = document
+    .getElementById("artist")
+    .value
+    .trim();
 
-const genre =
-document.getElementById("genre")
-.value;
+  const genre = document
+    .getElementById("genre")
+    .value;
 
-const name =
-document.getElementById("name")
-.value
-.trim();
+  const name = document
+    .getElementById("name")
+    .value
+    .trim();
 
-if(song === ""){
+  if (!song) {
+    status.innerHTML = "⚠️ Inserisci il titolo della canzone";
+    return;
+  }
 
-status.innerHTML =
-"⚠️ Inserisci il titolo della canzone";
+  try {
 
-return;
+    console.log("Cerco:", song);
 
-}
+    const q = query(
+      collection(db, "requests"),
+      where("song", "==", song)
+    );
 
-try{
+    const snapshot = await getDocs(q);
 
-console.log("Cerco canzone:", song);
+    console.log("Trovati:", snapshot.size);
 
-const existingQuery = query(
-collection(db,"requests"),
-where("song","==",song)
-);
+    if (!snapshot.empty) {
 
-const existingDocs =
-await getDocs(existingQuery);
+      const existingDoc = snapshot.docs[0];
 
-console.log(
-"Documenti trovati:",
-existingDocs.size
-);
+      const currentVotes =
+        existingDoc.data().votes || 1;
 
-if(existingDocs.size > 0){
+      await updateDoc(existingDoc.ref, {
+        votes: currentVotes + 1
+      });
 
-const existingDoc =
-existingDocs.docs[0];
+      status.innerHTML =
+        "👍 Canzone già presente, voto aggiunto!";
 
-const currentVotes =
-existingDoc.data().votes || 1;
+      console.log(
+        "Nuovo totale voti:",
+        currentVotes + 1
+      );
 
-await updateDoc(
-existingDoc.ref,
-{
-votes: currentVotes + 1
-}
-);
+    } else {
 
-status.innerHTML =
-"👍 Canzone già presente, voto aggiunto!";
+      await addDoc(
+        collection(db, "requests"),
+        {
+          song,
+          artist,
+          genre,
+          name,
+          votes: 1,
+          played: false,
+          createdAt: serverTimestamp()
+        }
+      );
 
-console.log(
-"Nuovi voti:",
-currentVotes + 1
-);
+      status.innerHTML =
+        "✅ Richiesta inviata!";
 
-}else{
+      console.log("Nuova canzone salvata");
 
-await addDoc(
-collection(db,"requests"),
-{
-song: song,
-artist: artist,
-genre: genre,
-name: name,
-votes: 1,
-played: false,
-createdAt: serverTimestamp()
-}
-);
+    }
 
-status.innerHTML =
-"✅ Richiesta inviata!";
+    document.getElementById("song").value = "";
+    document.getElementById("artist").value = "";
+    document.getElementById("name").value = "";
 
-console.log(
-"Nuova canzone salvata"
-);
+  } catch (error) {
 
-}
+    console.error(error);
 
-document.getElementById("song").value = "";
-document.getElementById("artist").value = "";
-document.getElementById("name").value = "";
+    status.innerHTML =
+      "❌ Errore durante l'invio";
 
-}
-catch(error){
+  }
 
-console.error(error);
-
-status.innerHTML =
-"❌ Errore durante l'invio";
-
-}
-
-}
+};
 
 </script>
