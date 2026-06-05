@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<title>PartyOnAir DJ</title>
+
+<style>
+
+body{
+background:#111827;
+font-family:Arial;
+color:white;
+padding:20px;
+}
+
+.card{
+background:#1f2937;
+padding:15px;
+border-radius:12px;
+margin-bottom:10px;
+}
+
+button{
+padding:10px;
+border:none;
+border-radius:8px;
+cursor:pointer;
+margin-top:10px;
+}
+
+.played{
+background:#22c55e;
+color:white;
+}
+
+.login{
+max-width:400px;
+margin:auto;
+}
+
+input{
+width:100%;
+padding:12px;
+margin:10px 0;
+border-radius:8px;
+border:none;
+}
+
+</style>
+</head>
+
+<body>
+
+<div id="login" class="login">
+
+<h2>Login DJ</h2>
+
+<input id="user" placeholder="Utente">
+
+<input
+id="pass"
+type="password"
+placeholder="Password">
+
+<button onclick="login()">
+Accedi
+</button>
+
+</div>
+
+<div id="panel" style="display:none">
+
+<h1>🎧 PartyOnAir DJ</h1>
+
+<div id="songs"></div>
+
+</div>
+
+<script type="module">
+
+import { initializeApp }
+from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+
+import {
+getFirestore,
+collection,
+query,
+orderBy,
+onSnapshot,
+doc,
+updateDoc
+}
+from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+const firebaseConfig = {
+apiKey:"AIzaSyAF3y8cP1hEaIoWlnAiesGhqWI2icL6pLg",
+authDomain:"partyonair-f208c.firebaseapp.com",
+projectId:"partyonair-f208c",
+storageBucket:"partyonair-f208c.firebasestorage.app",
+messagingSenderId:"323095980752",
+appId:"1:323095980752:web:9fcd2f0626688e13a34cd5"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+window.login = () => {
+
+const u =
+document.getElementById("user").value;
+
+const p =
+document.getElementById("pass").value;
+
+if(
+u==="dj" &&
+p==="Ginofastidiociccio"
+){
+
+document.getElementById("login").style.display="none";
+document.getElementById("panel").style.display="block";
+
+loadSongs();
+
+}else{
+
+alert("Credenziali errate");
+
+}
+
+}
+
+function loadSongs(){
+
+const q =
+query(
+collection(db,"requests"),
+orderBy("createdAt","desc")
+);
+
+onSnapshot(q,(snapshot)=>{
+
+let html="";
+
+snapshot.forEach((docSnap)=>{
+
+const data=docSnap.data();
+
+html += `
+<div class="card">
+
+<h3>${data.song}</h3>
+
+<p>
+Richiesta da:
+${data.name || "Anonimo"}
+</p>
+
+<p>
+Voti: ${data.votes}
+</p>
+
+<p>
+Suonata:
+${data.played ? "✅" : "❌"}
+</p>
+
+<button
+class="played"
+onclick="markPlayed('${docSnap.id}')">
+
+Segna come suonata
+
+</button>
+
+</div>
+`;
+
+});
+
+document.getElementById("songs").innerHTML =
+html;
+
+});
+
+}
+
+window.markPlayed =
+async(id)=>{
+
+await updateDoc(
+doc(db,"requests",id),
+{
+played:true
+}
+);
+
+}
+
+</script>
+
+</body>
+</html>
